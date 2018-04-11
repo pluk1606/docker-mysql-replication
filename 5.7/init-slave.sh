@@ -14,30 +14,28 @@ MYSQLDUMP_PORT=${MYSQLDUMP_PORT:-$MASTER_PORT}
 
 
 check_slave_health () {
-  echo Checking replication health:
-  status=$(mysql -u root -e "SHOW SLAVE STATUS\G")
-  echo "$status" | egrep 'Slave_(IO|SQL)_Running:|Seconds_Behind_Master:|Last_.*_Error:' | grep -v "Error: $"
-  if ! echo "$status" | grep -qs "Slave_IO_Running: Yes"    ||
-     ! echo "$status" | grep -qs "Slave_SQL_Running: Yes"   ||
-     ! echo "$status" | grep -qs "Seconds_Behind_Master: 0" ; then
-	echo WARNING: Replication is not healthy.
-    return 1
-  fi
-  return 0
+    echo Checking replication health:
+    status=$(mysql -u root -e "SHOW SLAVE STATUS\G")
+    echo "$status" | egrep 'Slave_(IO|SQL)_Running:|Seconds_Behind_Master:|Last_.*_Error:' | grep -v "Error: $"
+    if ! echo "$status" | grep -qs "Slave_IO_Running: Yes"    ||
+        ! echo "$status" | grep -qs "Slave_SQL_Running: Yes"   ||
+        ! echo "$status" | grep -qs "Seconds_Behind_Master: 0" ; then
+	           echo WARNING: Replication is not healthy.
+               return 1
+    fi
+    return 0
 }
 
+echo Updating master connetion info in slave.
 
-
-    echo Updating master connetion info in slave.
-
-    mysql -u root -e "RESET MASTER; \
+mysql -u root -e "RESET MASTER; \
       CHANGE MASTER TO \
       MASTER_HOST='$MASTER_HOST', \
       MASTER_PORT=$MASTER_PORT, \
       MASTER_USER='$REPLICATION_USER', \
       MASTER_PASSWORD='$REPLICATION_PASSWORD';"
 
-    mysqldump \
+mysqldump \
       --protocol=tcp \
       --user=root \
       --password=$MASTER_ROOT_PASSWORD \
@@ -51,24 +49,27 @@ check_slave_health () {
       --flush-privileges \
       | mysql -u root
 
-    echo mysqldump completed.
+echo mysqldump completed.
 
-    echo Starting slave ...
-    mysql -u root -p"$MASTER_ROOT_PASSWORD" -e "START SLAVE;"
+echo Starting slave ...
 
-    echo Initial health check:
-    check_slave_health
+mysql -u root -p"$MASTER_ROOT_PASSWORD" -e "START SLAVE;"
 
-    echo Waiting for health grace period and slave to be still healthy:
-    sleep $REPLICATION_HEALTH_GRACE_PERIOD
+echo Initial health check:
 
-    counter=0
-    while ! check_slave_health; do
-      if (( counter >= $REPLICATION_HEALTH_TIMEOUT )); then
+check_slave_health
+
+echo Waiting for health grace period and slave to be still healthy:
+
+sleep $REPLICATION_HEALTH_GRACE_PERIOD
+
+counter=0
+while ! check_slave_health; do
+    if (( counter >= $REPLICATION_HEALTH_TIMEOUT )); then
         echo ERROR: Replication not healthy, health timeout reached, failing.
     	break
         exit 1
-      fi
-      let counter=counter+1
-      sleep 1
-    done
+    fi
+    let counter=counter+1
+    sleep 1
+done
