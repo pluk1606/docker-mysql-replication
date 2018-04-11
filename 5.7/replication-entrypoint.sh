@@ -16,7 +16,7 @@ if [[ -z $MASTER_ROOT_PASSWORD ]];then
 else
     echo "Im going to set server id"
 
-    SERVER_ID=$(mysql -u root -p mysql.666! -e "SHOW SLAVE HOSTS;" | sed 's/^.* \(".*"$\)/\1/' | awk 'NR>1 {print $1}' | awk 'BEGIN{a=   0}{if ($1>0+a) a=$1} END{print a+1}')
+    SERVER_ID="$(mysql -u root -p mysql.666! -e "SHOW SLAVE HOSTS;" | sed 's/^.* \(".*"$\)/\1/' | awk 'NR>1 {print $1}' | awk 'BEGIN{a=   0}{if ($1>0+a) a=$1} END{print a+1}')"
 
     echo EHHHHHHHHH222222222 server id = "$SERVER_ID" and master root password = "$MASTER_ROOT_PASSWORD"
     # If there is a linked master use linked container information
