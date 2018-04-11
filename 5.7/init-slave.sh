@@ -26,7 +26,7 @@ check_slave_health () {
   return 0
 }
 
-if [[ -z $MASTER_ROOT_PASSWORD && -z $SERVER_ID ]];then
+
 
     echo Updating master connetion info in slave.
 
@@ -72,6 +72,3 @@ if [[ -z $MASTER_ROOT_PASSWORD && -z $SERVER_ID ]];then
       let counter=counter+1
       sleep 1
     done
-else
-    echo MASTER_ROOT_PASSWORD and SERVER_ID are mandatory.
-fi
