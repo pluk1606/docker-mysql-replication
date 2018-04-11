@@ -11,6 +11,10 @@ EOF
 
 if [[ -z $MASTER_ROOT_PASSWORD && -z $SERVER_ID ]];then
 
+    echo MASTER_ROOT_PASSWORD and SERVER_ID are mandatory.
+
+else
+    
 echo EHHHHHHHHH server id = $SERVER_ID
 
 # If there is a linked master use linked container information
@@ -61,6 +65,4 @@ EOF
 
 exec docker-entrypoint.sh "$@"
 
-else
-    echo MASTER_ROOT_PASSWORD and SERVER_ID are mandatory.
 fi
