@@ -14,11 +14,11 @@ if [[ -z $MASTER_ROOT_PASSWORD ]];then
     echo MASTER_ROOT_PASSWORD is mandatory.
 
 else
-    echo "Im going to set server id mysql -u root -p$MASTER_ROOT_PASSWORD -h$MASTER_HOST -P$MASTER_PORT"
-
+    #Getting server-id not used
+    #TODO: maybe server id can be setted from command and check if it's free
     SERVER_ID=$(mysql -u root -p$MASTER_ROOT_PASSWORD -h$MASTER_HOST -P$MASTER_PORT -e "SHOW SLAVE HOSTS;" | sed 's/^.* \(".*"$\)/\1/' | awk 'NR>1 {print $1}' | awk 'BEGIN{a=   0}{if ($1>0+a) a=$1} END{print a+1}')
 
-    echo EHHHHHHHHH222222222 server id = "$SERVER_ID" and master root password = "$MASTER_ROOT_PASSWORD"
+    echo  Server id = "$SERVER_ID" and master root password = "$MASTER_ROOT_PASSWORD"
 
     # If there is a linked master use linked container information
     if [ -n "$MASTER_PORT_3306_TCP_ADDR" ]; then

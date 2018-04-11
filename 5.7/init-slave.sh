@@ -12,11 +12,9 @@ REPLICATION_HEALTH_TIMEOUT=${REPLICATION_HEALTH_TIMEOUT:-10}
 MYSQLDUMP_HOST=${MYSQLDUMP_HOST:-$MASTER_HOST}
 MYSQLDUMP_PORT=${MYSQLDUMP_PORT:-$MASTER_PORT}
 
-echo EHHHHHHHHH222222222 server id = "$SERVER_ID" and master root password = $MASTER_ROOT_PASSWORD
-
 check_slave_health () {
     echo Checking replication health:
-    status=$(mysql -u root -e "SHOW SLAVE STATUS\G")
+    status=$(mysql -u root -p$MASTER_ROOT_PASSWORD -e "SHOW SLAVE STATUS\G")
     echo "$status" | egrep 'Slave_(IO|SQL)_Running:|Seconds_Behind_Master:|Last_.*_Error:' | grep -v "Error: $"
     if ! echo "$status" | grep -qs "Slave_IO_Running: Yes"    ||
         ! echo "$status" | grep -qs "Slave_SQL_Running: Yes"   ||
@@ -54,7 +52,7 @@ echo mysqldump completed.
 
 echo Starting slave ...
 
-mysql -u root -p"$MASTER_ROOT_PASSWORD" -e "START SLAVE;"
+mysql -u root -p$MASTER_ROOT_PASSWORD -e "START SLAVE;"
 
 echo Initial health check:
 
