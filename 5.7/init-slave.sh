@@ -3,12 +3,15 @@
 # * replicate-do-db=db_name only if we want to store and replicate certain DBs
 # * replicate-ignore-db=db_name used when we don't want to replicate certain DBs
 # * replicate_wild_do_table used to replicate tables based on wildcard patterns
-# * replicate_wild_ignore_table used to ignore tables in replication based on wildcard patterns 
+# * replicate_wild_ignore_table used to ignore tables in replication based on wildcard patterns
 
+MASTER_ROOT_PASSWORD=${MASTER_ROOT_PASSWORD:-$MASTER_ROOT_PASSWORD}
+SERVER_ID=${SERVER_ID:-$SERVER_ID}
 REPLICATION_HEALTH_GRACE_PERIOD=${REPLICATION_HEALTH_GRACE_PERIOD:-3}
 REPLICATION_HEALTH_TIMEOUT=${REPLICATION_HEALTH_TIMEOUT:-10}
 MYSQLDUMP_HOST=${MYSQLDUMP_HOST:-$MASTER_HOST}
 MYSQLDUMP_PORT=${MYSQLDUMP_PORT:-$MASTER_PORT}
+
 
 check_slave_health () {
   echo Checking replication health:
@@ -23,49 +26,52 @@ check_slave_health () {
   return 0
 }
 
+if [[ -z $MASTER_ROOT_PASSWORD && -z $SERVER_ID ]];then
 
-echo Updating master connetion info in slave.
+    echo Updating master connetion info in slave.
 
-mysql -u root -e "RESET MASTER; \
-  CHANGE MASTER TO \
-  MASTER_HOST='$MASTER_HOST', \
-  MASTER_PORT=$MASTER_PORT, \
-  MASTER_USER='$REPLICATION_USER', \
-  MASTER_PASSWORD='$REPLICATION_PASSWORD';"
+    mysql -u root -e "RESET MASTER; \
+      CHANGE MASTER TO \
+      MASTER_HOST='$MASTER_HOST', \
+      MASTER_PORT=$MASTER_PORT, \
+      MASTER_USER='$REPLICATION_USER', \
+      MASTER_PASSWORD='$REPLICATION_PASSWORD';"
 
-mysqldump \
-  --protocol=tcp \
-  --user=$REPLICATION_USER \
-  --password=$REPLICATION_PASSWORD \
-  --host=$MYSQLDUMP_HOST \
-  --port=$MYSQLDUMP_PORT \
-  --hex-blob \
-  --all-databases \
-  --add-drop-database \
-  --master-data \
-  --flush-logs \
-  --flush-privileges \
-  | mysql -u root
+    mysqldump \
+      --protocol=tcp \
+      --user=root \
+      --password=$MASTER_ROOT_PASSWORD \
+      --host=$MYSQLDUMP_HOST \
+      --port=$MYSQLDUMP_PORT \
+      --hex-blob \
+      --all-databases \
+      --add-drop-database \
+      --master-data \
+      --flush-logs \
+      --flush-privileges \
+      | mysql -u root
 
-echo mysqldump completed.
+    echo mysqldump completed.
 
-echo Starting slave ...
-mysql -u root -e "START SLAVE;"
+    echo Starting slave ...
+    mysql -u root -p"$MASTER_ROOT_PASSWORD" -e "START SLAVE;"
 
-echo Initial health check:
-check_slave_health
+    echo Initial health check:
+    check_slave_health
 
-echo Waiting for health grace period and slave to be still healthy:
-sleep $REPLICATION_HEALTH_GRACE_PERIOD
+    echo Waiting for health grace period and slave to be still healthy:
+    sleep $REPLICATION_HEALTH_GRACE_PERIOD
 
-counter=0
-while ! check_slave_health; do
-  if (( counter >= $REPLICATION_HEALTH_TIMEOUT )); then
-    echo ERROR: Replication not healthy, health timeout reached, failing.
-	break
-    exit 1
-  fi
-  let counter=counter+1
-  sleep 1
-done
-
+    counter=0
+    while ! check_slave_health; do
+      if (( counter >= $REPLICATION_HEALTH_TIMEOUT )); then
+        echo ERROR: Replication not healthy, health timeout reached, failing.
+    	break
+        exit 1
+      fi
+      let counter=counter+1
+      sleep 1
+    done
+else
+    echo MASTER_ROOT_PASSWORD and SERVER_ID are mandatory.
+fi

@@ -9,6 +9,8 @@ relay-log=mysql-relay
 #skip-name-resolve
 EOF
 
+echo EHHHHHHHHH server id = $SERVER_ID
+
 # If there is a linked master use linked container information
 if [ -n "$MASTER_PORT_3306_TCP_ADDR" ]; then
   export MASTER_HOST=$MASTER_PORT_3306_TCP_ADDR
@@ -38,7 +40,7 @@ mysql -u root -e "\
 EOF
 else
   # TODO: make server-id discoverable
-  export SERVER_ID=2
+  export SERVER_ID=$SERVER_ID
   cp -v /init-slave.sh /docker-entrypoint-initdb.d/
   cat > /etc/mysql/mysql.conf.d/repl-slave.cnf << EOF
 [mysqld]
@@ -55,4 +57,3 @@ server-id=$SERVER_ID
 EOF
 
 exec docker-entrypoint.sh "$@"
-
