@@ -64,6 +64,7 @@ EOF
     cat > /etc/mysql/mysql.conf.d/server-id.cnf << EOF
 [mysqld]
 server-id=$SERVER_ID
+read_only=on
 EOF
 
     exec docker-entrypoint.sh "$@"
