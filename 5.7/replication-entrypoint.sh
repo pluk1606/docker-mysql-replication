@@ -16,7 +16,7 @@ if [[ -z $MASTER_ROOT_PASSWORD ]];then
 else
     #Getting server-id not used
     #TODO: maybe server id can be setted from command and check if it's free
-    SERVER_ID=$(mysql -u root -p$MASTER_ROOT_PASSWORD -h$MASTER_HOST -P$MASTER_PORT -e "SHOW SLAVE HOSTS;" | sed 's/^.* \(".*"$\)/\1/' | awk 'NR>1 {print $1}' | awk 'BEGIN{a=   0}{if ($1>0+a) a=$1} END{print a+1}')
+    #SERVER_ID=$(mysql -u root -p$MASTER_ROOT_PASSWORD -h$MASTER_HOST -P$MASTER_PORT -e "SHOW SLAVE HOSTS;" | sed 's/^.* \(".*"$\)/\1/' | awk 'NR>1 {print $1}' | awk 'BEGIN{a=   0}{if ($1>0+a) a=$1} END{print a+1}')
 
     echo  Server id = "$SERVER_ID" and master root password = "$MASTER_ROOT_PASSWORD"
 
