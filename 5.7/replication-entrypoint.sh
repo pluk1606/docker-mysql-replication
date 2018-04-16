@@ -66,8 +66,8 @@ EOF
 server-id=$SERVER_ID
 read_only=on
 sql_mode="NO_ENGINE_SUBSTITUTION"
-character-set-server=utf8
-collation-server=utf8mb4_unicode_ci
+character-set-server = utf8
+collation-server = utf8_general_ci
 EOF
 
     exec docker-entrypoint.sh "$@"
